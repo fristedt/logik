@@ -50,6 +50,12 @@ valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
 
+% MT
+valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
+  lookup_line(X, Previously, imp(B, A)),
+  lookup_line(Y, Previously, neg(A)),
+  valid_proof(Prems, Goal, T, [[L, neg(B), mt(X, Y)]|Previously]).
+
 % 2. p -> neg(p) A
 % 3. p           Z
 % 4. neg(p)      B
