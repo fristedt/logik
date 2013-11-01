@@ -16,6 +16,10 @@ valid_proof(Prems, Goal, [[L, Predicate, premise]|T], Previously) :-
   is_premise(Previously),
   valid_premise(Predicate, Prems), !,
   valid_proof(Prems, Goal, T, [[L, Predicate, premise]|Previously]).
+% Assumption.
+valid_proof(Prems, Goal, [[[L, Predicate, assumption]|T1]|T2], Previously) :-
+  valid_proof(Prems, Goal, T1, [[L, Predicate, assumption]|Previously]), !,
+  valid_proof(Prems, Goal, T2, [[[L, Predicate, assumption]|T1]|Previously]).
 % Copy.
 valid_proof(Prems, Goal, [[L, Y, copy(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
@@ -41,6 +45,21 @@ valid_proof(Prems, Goal, [[L, or(Y, Z), orint1(X)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
+% Or elimination.
+% valid_proof(Prems, Goal, [[L, PLACEHOLDER, orel(X, Y, U, V, W)]|T], Previously) :-
+%   lookup_line(X, Previously, Y), !,
+%   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
+% Implication introduction.
+valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
+  first_in_box(Previously, Box),
+  lookup_line(X, Box, A),
+  lookup_line(Y, Box, B), !, 
+  valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
+% Implication elimination.
+valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
+  lookup_line(X, Previously, Z),
+  lookup_line(Y, Previously, imp(Z, B)), !,
+  valid_proof(Prems, Goal, T, [[L, B, impel(X, Y)]|Previously]).
 % Double negation elimination.
 valid_proof(Prems, Goal, [[L, neg(neg(Y)), negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
@@ -54,16 +73,6 @@ valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
-
-% 2. p -> neg(p) A
-% 3. p           Z
-% 4. neg(p)      B
-% Implication elimination.
-valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
-  lookup_line(X, Previously, Z),
-  lookup_line(Y, Previously, imp(Z, B)), !,
-  valid_proof(Prems, Goal, T, [[L, B, impel(X, Y)]|Previously]).
-
 % valid_proof(Prems, Goal, [[L, Predicate, assumption]|T], Previously) :-
 %   valid_proof(Prems, Goal, T, [[L, Predicate, assumption]|Previously]).
 
@@ -86,6 +95,11 @@ valid_premise(Prem, [_|T]) :-
 lookup_line(_, [], _) :- fail.
 lookup_line(Index, [[Index, Line, _]|_], Line).
 lookup_line(Index, [_|T], Match) :- lookup_line(Index, T, Match).
+
+first_in_box([H|_], H).
+
+last_in_box([H|[]], H) :- !.
+last_in_box([_|T], H) :- last_in_box(T, H).
 
 % Return !X.
 neg(X) :-
