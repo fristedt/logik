@@ -11,9 +11,26 @@ valid_proof(Prems, Goal, Proof) :-
 
 % Check if proof is valid.
 valid_proof(_, _, [], _) :- !.
-valid_proof(Prems, Goals, [H|T], Previously) :-
-  valid_line(H, Prems), !,
-  valid_proof(Prems, Goals, T, [H|Previously]).
+% Premise.
+valid_proof(Prems, Goal, [[LineNumber, Predicate, premise]|T], Previously) :-
+  is_premise(Previously),
+  valid_premise(Predicate, Prems), !,
+  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, premise]|Previously]).
+% Double negation elimination.
+valid_proof(Prems, Goal, [[LineNumber, neg(neg(Y)), negnegel(X)]|T], Previously) :-
+  lookup_line(X, Previously, Y),
+  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, negnegel(X)]|Previously]).
+% 2. p -> neg(p) A
+% 3. p           Z
+% 4. neg(p)      B
+% Implication elimination.
+valid_proof(Prems, Goal, [[LineNumber, B, impel(X, Y)]|T], Previously) :-
+  lookup_line(X, Previously, Z),
+  lookup_line(Y, Previously, imp(Z, B)), !,
+  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, impel(X, Y)]|Previously]).
+
+% valid_proof(Prems, Goal, [[LineNumber, Predicate, assumption]|T], Previously) :-
+%   valid_proof(Prems, Goal, T, [[LineNumber, Predicate, assumption]|Previously]).
 
 % Check if line is valid.
 valid_line([_, P, premise], Prems) :- 
@@ -21,15 +38,19 @@ valid_line([_, P, premise], Prems) :-
 valid_line([_, _, assumption], _).
 valid_line([_, _, X], _) :- valid_proofilicous(X).
 
+% Make sure that the premise isn't in the middle of our proof or anything crazy.
+is_premise([]).
+is_premise([[_, _, premise]|T]) :- is_premise(T).
+
 % Check if premise is valid.
 valid_premise(_, []) :- fail.
-valid_premise(Prems, [Prems|T]).
-valid_premise(Prems, [_|T]) :-
+valid_premise(Prem, [Prem|T]).
+valid_premise(Prem, [_|T]) :-
   valid_premise(Prems, T).
 
-lookup_line(Index, []) :- fail.
-lookup_line(Index, [[Index, Line, _]|T]) :- Line.
-lookup_line(Index, [_|T]) :- lookup_line(Index, T).
+lookup_line(_, [], _) :- fail.
+lookup_line(Index, [[Index, Line, _]|T], Line).
+lookup_line(Index, [_|T], Match) :- lookup_line(Index, T, Match).
 
 % Return !X.
 neg(X) :-
