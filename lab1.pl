@@ -44,13 +44,17 @@ valid_proof(Prems, Goal, [[L, or(Y, Z), orint1(X)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
-% Or elimination.
-% valid_proof(Prems, Goal, [[L, PLACEHOLDER, orel(X, Y, U, V, W)]|T], Previously) :-
-%   lookup_line(X, Previously, Y), !,
-%   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
-% Implication introduction.
+% Or elimination. This sort of works. Cray.
+valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
+  lookup_line(X, Previously, or(A, B)),
+  first_in_box(Box1, A),
+  first_in_box(Box2, B),
+  last_in_box(Box1, C),
+  last_in_box(Box2, C), !,
+  valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
+% Implication introduction. This one is also fucking crazy.
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  first_in_box(Previously, Box),
+  % first_in_box(Previously, Box), 
   lookup_line(X, Box, A),
   lookup_line(Y, Box, B), !, 
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
@@ -71,17 +75,17 @@ valid_proof(Prems, Goal, [[L, cont, negel(X, Y)]|T], Previously) :-
   lookup_line(Y, Previously, neg(A)), !,
   valid_proof(Prems, Goal, T, [[L, cont, negel(X, Y)]|Previously]).
 % Contradiction elimination.
-valid_proof(Prems, Goal, [[L, A, cont]|T], Previously) :-
-  !,
-  valid_proof(Prems, Goal, T, [[L, A, cont]|Previously]).
+valid_proof(Prems, Goal, [[L, A, contel(X)]|T], Previously) :-
+  lookup_line(X, Previously, cont), !,
+  valid_proof(Prems, Goal, T, [[L, A, contel(X)]|Previously]).
 % Double negation introduction. 
 valid_proof(Prems, Goal, [[L, neg(neg(A)), negnegint(X)]|T], Previously) :-
   lookup_line(X, Previously, A), !,
   valid_proof(Prems, Goal, T, [[L, A, cont]|Previously]).
 % Double negation elimination.
-valid_proof(Prems, Goal, [[L, neg(neg(Y)), negnegel(X)]|T], Previously) :-
-  lookup_line(X, Previously, Y), !,
-  valid_proof(Prems, Goal, T, [[L, neg(neg(Y)), negnegel(X)]|Previously]).
+valid_proof(Prems, Goal, [[L, Y, negnegel(X)]|T], Previously) :-
+  lookup_line(X, Previously, neg(neg(Y))), !,
+  valid_proof(Prems, Goal, T, [[L, Y, negnegel(X)]|Previously]).
 % MT
 valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, imp(B, A)),
