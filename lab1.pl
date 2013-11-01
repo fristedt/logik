@@ -45,16 +45,15 @@ valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, neg(neg(Y)), negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, neg(neg(Y)), negnegel(X)]|Previously]).
-% Double negation elimination.
-valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
-  !,
-  valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
-
 % MT
 valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, imp(B, A)),
   lookup_line(Y, Previously, neg(A)),
   valid_proof(Prems, Goal, T, [[L, neg(B), mt(X, Y)]|Previously]).
+% LEM
+valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
+  !,
+  valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
 
 % 2. p -> neg(p) A
 % 3. p           Z
