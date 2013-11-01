@@ -46,9 +46,9 @@ valid_proof(Prems, Goal, [[L, neg(neg(Y)), negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, neg(neg(Y)), negnegel(X)]|Previously]).
 % Double negation elimination.
-valid_proof(Prems, Goal, [[L, B, negnegel(X)]|T], Previously) :-
-  lookup_line(X, Previously, neg(neg(B))),
-  valid_proof(Prems, Goal, T, [[L, B, negnegel(X)]|Previously]).
+valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
+  !,
+  valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
 
 % 2. p -> neg(p) A
 % 3. p           Z
