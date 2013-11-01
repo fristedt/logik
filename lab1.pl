@@ -13,7 +13,6 @@ valid_proof(Prems, Goal, Proof) :-
 valid_proof(_, _, [], _) :- !.
 % Premise.
 valid_proof(Prems, Goal, [[L, Predicate, premise]|T], Previously) :-
-  is_premise(Previously),
   valid_premise(Predicate, Prems), !,
   valid_proof(Prems, Goal, T, [[L, Predicate, premise]|Previously]).
 % Assumption.
@@ -60,6 +59,25 @@ valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, Z),
   lookup_line(Y, Previously, imp(Z, B)), !,
   valid_proof(Prems, Goal, T, [[L, B, impel(X, Y)]|Previously]).
+% Negation introduction.
+valid_proof(Prems, Goal, [[L, neg(A), negint(X, Y)]|T], Previously) :-
+  first_in_box(Previously, Box),
+  lookup_line(X, Box, A),
+  lookup_line(Y, Box, cont), !, 
+  valid_proof(Prems, Goal, T, [[L, neg(A), negint(X, Y)]|Previously]).
+% Negation elimination.
+valid_proof(Prems, Goal, [[L, cont, negel(X, Y)]|T], Previously) :-
+  lookup_line(X, Previously, A),
+  lookup_line(Y, Previously, neg(A)), !,
+  valid_proof(Prems, Goal, T, [[L, cont, negel(X, Y)]|Previously]).
+% Contradiction elimination.
+valid_proof(Prems, Goal, [[L, A, cont]|T], Previously) :-
+  !,
+  valid_proof(Prems, Goal, T, [[L, A, cont]|Previously]).
+% Double negation introduction. 
+valid_proof(Prems, Goal, [[L, neg(neg(A)), negnegint(X)]|T], Previously) :-
+  lookup_line(X, Previously, A), !,
+  valid_proof(Prems, Goal, T, [[L, A, cont]|Previously]).
 % Double negation elimination.
 valid_proof(Prems, Goal, [[L, neg(neg(Y)), negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
@@ -69,12 +87,16 @@ valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, imp(B, A)),
   lookup_line(Y, Previously, neg(A)),
   valid_proof(Prems, Goal, T, [[L, neg(B), mt(X, Y)]|Previously]).
+% Proof by contradiction.
+valid_proof(Prems, Goal, [[L, A, pbc(X, Y)]|T], Previously) :-
+  first_in_box(Previously, Box),
+  lookup_line(X, Box, neg(A)),
+  lookup_line(Y, Box, cont), !, 
+  valid_proof(Prems, Goal, T, [[L, neg(A), negint(X, Y)]|Previously]).
 % LEM
 valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
-% valid_proof(Prems, Goal, [[L, Predicate, assumption]|T], Previously) :-
-%   valid_proof(Prems, Goal, T, [[L, Predicate, assumption]|Previously]).
 
 % Check if line is valid.
 valid_line([_, P, premise], Prems) :- 

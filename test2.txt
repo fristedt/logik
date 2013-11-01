@@ -1,9 +1,12 @@
 [p].
 
-or(p, q).
+neg(p).
 
 [
   [1, p, premise],
-  [2, or(p, neg(p)), lem]
+  [
+    [2, cont, assumption]
+  ],
+  [3, neg(p), negint(x, y)]
 ].
 
