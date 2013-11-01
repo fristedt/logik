@@ -19,32 +19,32 @@ valid_proof(Prems, Goal, [[LineNumber, Predicate, premise]|T], Previously) :-
 % Copy.
 valid_proof(Prems, Goal, [[LineNumber, Y, copy(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, copy(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, Y, copy(X)]|Previously]).
 % And introduction.
 valid_proof(Prems, Goal, [[LineNumber, and(A, B), andint(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, A),
   lookup_line(Y, Previously, B), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, andint(X, Y)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, and(A, B), andint(X, Y)]|Previously]).
 % And elimination 1.
 valid_proof(Prems, Goal, [[LineNumber, Y, andel1(X)]|T], Previously) :-
   lookup_line(X, Previously, and(Y, _)), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, andel1(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, Y, andel1(X)]|Previously]).
 % And elimination 2.
 valid_proof(Prems, Goal, [[LineNumber, Y, andel2(X)]|T], Previously) :-
   lookup_line(X, Previously, and(_, Y)), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, andel2(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, Y, andel2(X)]|Previously]).
 % Or introduction 1.
-valid_proof(Prems, Goal, [[LineNumber, or(Y, _), orint1(X)]|T], Previously) :-
+valid_proof(Prems, Goal, [[LineNumber, or(Y, Z), orint1(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, orint1(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, or(Y, Z), orint1(X)]|Previously]).
 % Or introduction 2.
-valid_proof(Prems, Goal, [[LineNumber, or(_, Y), orint2(X)]|T], Previously) :-
+valid_proof(Prems, Goal, [[LineNumber, or(Z, Y), orint2(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, orint2(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, or(Z, Y), orint2(X)]|Previously]).
 % Double negation elimination.
 valid_proof(Prems, Goal, [[LineNumber, neg(neg(Y)), negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, negnegel(X)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, neg(neg(Y)), negnegel(X)]|Previously]).
 % 2. p -> neg(p) A
 % 3. p           Z
 % 4. neg(p)      B
@@ -52,7 +52,7 @@ valid_proof(Prems, Goal, [[LineNumber, neg(neg(Y)), negnegel(X)]|T], Previously)
 valid_proof(Prems, Goal, [[LineNumber, B, impel(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, Z),
   lookup_line(Y, Previously, imp(Z, B)), !,
-  valid_proof(Prems, Goal, T, [[LineNumber, Predicate, impel(X, Y)]|Previously]).
+  valid_proof(Prems, Goal, T, [[LineNumber, B, impel(X, Y)]|Previously]).
 
 % valid_proof(Prems, Goal, [[LineNumber, Predicate, assumption]|T], Previously) :-
 %   valid_proof(Prems, Goal, T, [[LineNumber, Predicate, assumption]|Previously]).
@@ -69,12 +69,12 @@ is_premise([[_, _, premise]|T]) :- is_premise(T).
 
 % Check if premise is valid.
 valid_premise(_, []) :- fail.
-valid_premise(Prem, [Prem|T]).
+valid_premise(Prem, [Prem|_]).
 valid_premise(Prem, [_|T]) :-
-  valid_premise(Prems, T).
+  valid_premise(Prem, T).
 
 lookup_line(_, [], _) :- fail.
-lookup_line(Index, [[Index, Line, _]|T], Line).
+lookup_line(Index, [[Index, Line, _]|_], Line).
 lookup_line(Index, [_|T], Match) :- lookup_line(Index, T, Match).
 
 % Return !X.
