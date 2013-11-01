@@ -5,6 +5,8 @@ verify(InputFileName) :-
   seen,
   valid_proof(Prems, Goal, Proof).
 
+% Proofs can't be empty.
+valid_proof(_, _, []) :- !, fail.
 % Check if proof is valid.
 valid_proof(Prems, Goal, Proof) :-
   valid_proof(Prems, Goal, Proof, []).
@@ -16,6 +18,9 @@ valid_proof(Prems, Goal, [[L, Predicate, premise]|T], Previously) :-
   valid_premise(Predicate, Prems), !,
   valid_proof(Prems, Goal, T, [[L, Predicate, premise]|Previously]).
 % Assumption.
+% You can't end a proof with an assumption.
+valid_proof(_, _, [[[_, _, assumption]|[]]|[]], _) :- !, fail.
+% Parse box.
 valid_proof(Prems, Goal, [[[L, Predicate, assumption]|T1]|T2], Previously) :-
   valid_proof(Prems, Goal, T1, [[L, Predicate, assumption]|Previously]), !,
   valid_proof(Prems, Goal, T2, [[[L, Predicate, assumption]|T1]|Previously]).
