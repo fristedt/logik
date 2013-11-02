@@ -9,6 +9,7 @@ verify(InputFileName) :-
 valid_proof(_, _, []) :- !, fail.
 % Check if proof is valid.
 valid_proof(Prems, Goal, Proof) :-
+  last_in_box(Proof, [_, Goal, _]), % Proofs should end with the conclusion.
   valid_proof(Prems, Goal, Proof, []).
 
 % Check if proof is valid.
@@ -57,16 +58,16 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   last_in_box(Box1, C),
   last_in_box(Box2, C), !,
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
-% Implication introduction. This one is also fucking crazy.
+% Implication introduction. 
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  % first_in_box(Previously, Box), 
+  first_in_box(Previously, Box), % Need better solution for valid20.
   lookup_line(X, Box, A),
   lookup_line(Y, Box, B), !, 
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
 % Implication elimination.
 valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
-  lookup_line(X, Previously, Z),
-  lookup_line(Y, Previously, imp(Z, B)), !,
+  lookup_line(X, Previously, A),
+  lookup_line(Y, Previously, imp(A, B)), !,
   valid_proof(Prems, Goal, T, [[L, B, impel(X, Y)]|Previously]).
 % Negation introduction.
 valid_proof(Prems, Goal, [[L, neg(A), negint(X, Y)]|T], Previously) :-
