@@ -50,7 +50,7 @@ valid_proof(Prems, Goal, [[L, or(Y, Z), orint1(X)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
-% Or elimination. This sort of works. Cray.
+% Or elimination. 
 valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   lookup_line(X, Previously, or(A, B)),
   first_in_box(Box1, A),
@@ -60,9 +60,11 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  first_in_box(Previously, Box), % Need better solution for valid20.
+  % Need to make sure that Box is not in a closed box.
+  first_in_box(Box, [_, A, _]), 
+  last_in_box(Box, [_, B, _]),
   lookup_line(X, Box, A),
-  lookup_line(Y, Box, B), !, 
+  lookup_line(Y, Box, B), !,
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
 % Implication elimination.
 valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
