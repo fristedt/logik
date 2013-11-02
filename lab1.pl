@@ -60,7 +60,7 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  % Need to make sure that Box is not in a closed box.
+  box_is_in_box(Previously, Box), 
   first_in_box(Box, [_, A, _]), 
   last_in_box(Box, [_, B, _]),
   lookup_line(X, Box, A),
@@ -134,6 +134,10 @@ first_in_box([H|_], H).
 
 last_in_box([H|[]], H) :- !.
 last_in_box([_|T], H) :- last_in_box(T, H).
+
+box_is_in_box([], _) :- !, fail.
+box_is_in_box([Box|_], Box).
+box_is_in_box([_|T], Box) :- box_is_in_box(T, Box).
 
 % Return !X.
 neg(X) :-
