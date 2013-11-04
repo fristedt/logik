@@ -1,0 +1,24 @@
+[or(p, r)].
+
+imp(q, or(p, r)).
+
+[
+  [1, or(p, r), premise],
+  [
+    [2, p, assumption],
+    [
+      [3, q, assumption],
+      [4, or(p, r), copy(1)]
+    ],
+    [5, imp(q, or(p, r)), impint(3, 4)]
+  ],
+  [
+    [6, r, assumption],
+    [
+      [7, q, assumption],
+      [8, or(p, r), copy(1)]
+    ],
+    [9, imp(q, or(p, r)), impint(7, 8)]
+  ],
+  [10, imp(q, or(p, r)), orel(1, 2, 5, 6, 9)]
+].
