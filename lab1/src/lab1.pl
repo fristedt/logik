@@ -120,15 +120,23 @@ valid_premise(Prem, [Prem|_]).
 valid_premise(Prem, [_|T]) :-
   valid_premise(Prem, T).
 
+% Get the content of the line with the given Index in the given list.
+%   lookup_line(1, [[1, 2, _]], Line). => Line = 2
 lookup_line(_, [], _) :- fail.
 lookup_line(Index, [[Index, Line, _]|_], Line).
 lookup_line(Index, [_|T], Match) :- lookup_line(Index, T, Match).
 
+% Get the first element in the given list.
+%   first_in_box([1, 2, 3], H). => H = 1
 first_in_box([H|_], H).
 
+% Get the last element in the given list.
+%   last_in_box([1, 2, 3], L). => L = 3
 last_in_box([H|[]], H) :- !.
 last_in_box([_|T], H) :- last_in_box(T, H).
 
+% Determine if the given Box in in the list.
+%   box_is_in_box([1, 2, 3], 2). => true
 box_is_in_box([], _) :- !, fail.
 box_is_in_box([Box|_], Box).
 box_is_in_box([_|T], Box) :- box_is_in_box(T, Box).
@@ -147,4 +155,3 @@ and(A, B) :- A, B.
 % Logical or.
 or(A, _) :- A.
 or(_, B) :- B.
-
