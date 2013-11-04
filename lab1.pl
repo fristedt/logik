@@ -134,8 +134,7 @@ box_is_in_box([Box|_], Box).
 box_is_in_box([_|T], Box) :- box_is_in_box(T, Box).
 
 % Return !X.
-neg(X) :-
-  not(X).
+neg(X) :- not(X).
 
 % Check if an implication holds.
 imp(fail, fail) :- !.
