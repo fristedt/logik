@@ -136,10 +136,6 @@ valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
 
-% Make sure that the premise isn't in the middle of our proof or anything crazy.
-is_premise([]).
-is_premise([[_, _, premise]|T]) :- is_premise(T).
-
 % Check if premise is valid.
 valid_premise(_, []) :- fail.
 valid_premise(Prem, [Prem|_]).
