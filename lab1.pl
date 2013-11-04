@@ -60,7 +60,7 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  box_is_in_box(Previously, Box), 
+  box_is_in_box(Previously, Box), % Make sure that Box isn't in a closed box.
   first_in_box(Box, [_, A, _]), 
   last_in_box(Box, [_, B, _]),
   lookup_line(X, Box, A),
@@ -109,12 +109,6 @@ valid_proof(Prems, Goal, [[L, A, pbc(X, Y)]|T], Previously) :-
 valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
-
-% Check if line is valid.
-valid_line([_, P, premise], Prems) :- 
-  valid_premise(P, Prems).
-valid_line([_, _, assumption], _).
-valid_line([_, _, X], _) :- valid_proofilicous(X).
 
 % Make sure that the premise isn't in the middle of our proof or anything crazy.
 is_premise([]).
