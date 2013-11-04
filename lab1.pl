@@ -53,18 +53,16 @@ valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
 % Or elimination. 
 valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   lookup_line(X, Previously, or(A, B)),
-  first_in_box(Box1, A),
-  first_in_box(Box2, B),
-  last_in_box(Box1, C),
-  last_in_box(Box2, C), !,
+  first_in_box(Box1, [Y, A, _]),
+  first_in_box(Box2, [V, B, _]),
+  last_in_box(Box1, [U, C, _]),
+  last_in_box(Box2, [W, C, _]), !,
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
   box_is_in_box(Previously, Box), % Make sure that Box isn't in a closed box.
-  first_in_box(Box, [_, A, _]), 
-  last_in_box(Box, [_, B, _]),
-  lookup_line(X, Box, A),
-  lookup_line(Y, Box, B), !,
+  first_in_box(Box, [X, A, _]), 
+  last_in_box(Box, [Y, B, _]), !,
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
 % Implication elimination.
 valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
