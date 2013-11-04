@@ -15,6 +15,8 @@ valid_proof(Prems, Goal, Proof) :-
 % Check if proof is valid.
 valid_proof(_, _, [], _) :- !.
 % Premise.
+% Previously is a list storing previous lines, used to check which lines are 
+% allowed to make a reference to. 
 valid_proof(Prems, Goal, [[L, Predicate, premise]|T], Previously) :-
   valid_premise(Predicate, Prems), !,
   valid_proof(Prems, Goal, T, [[L, Predicate, premise]|Previously]).
@@ -22,6 +24,11 @@ valid_proof(Prems, Goal, [[L, Predicate, premise]|T], Previously) :-
 % You can't end a proof with an assumption.
 valid_proof(_, _, [[[_, _, assumption]|[]]|[]], _) :- !, fail.
 % Parse box.
+% Box (T1) in a box (T2). 
+% Add lines from T1 to Previously until box closes, T1 is allowed to use all
+% previous lines. When T1 closes it is added to Previously as a box, which
+% makes T2 and the rest of the program unable to access the lines in it
+% without the use of the predicates first_in_box and last_in_box.
 valid_proof(Prems, Goal, [[[L, Predicate, assumption]|T1]|T2], Previously) :-
   valid_proof(Prems, Goal, T1, [[L, Predicate, assumption]|Previously]), !,
   valid_proof(Prems, Goal, T2, [[[L, Predicate, assumption]|T1]|Previously]).
@@ -30,6 +37,8 @@ valid_proof(Prems, Goal, [[L, Y, copy(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, Y, copy(X)]|Previously]).
 % And introduction.
+% If and introduction is used, look up the lines that are referenced to
+% and see if an and-operation is allowed.
 valid_proof(Prems, Goal, [[L, and(A, B), andint(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, A),
   lookup_line(Y, Previously, B), !,
@@ -51,6 +60,11 @@ valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
   lookup_line(X, Previously, Y), !,
   valid_proof(Prems, Goal, T, [[L, or(Z, Y), orint2(X)]|Previously]).
 % Or elimination. 
+% X is an or statement.
+% Y is line number of first statement in first box.
+% U is line number of last statement in first box.
+% V is line number of first statement in second box.
+% W is line number of last statement in second box.
 valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   lookup_line(X, Previously, or(A, B)),
   first_in_box(Box1, A),
@@ -59,6 +73,10 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   last_in_box(Box2, C), !,
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
+% Checks if the box that is being referenced to is in the scope of the current
+% box. Checks if A is the first predicate in a box and if B is the last
+% predicate in the same box. Checks if the line numbers of A and B matches 
+% X and Y.
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
   box_is_in_box(Previously, Box), 
   first_in_box(Box, [_, A, _]), 
@@ -67,22 +85,30 @@ valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
   lookup_line(Y, Box, B), !,
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
 % Implication elimination.
+% Look up the lines being referenced to and check if the predicate on line X
+% implies the predicate on line Y. It is assumed that the predicate on line X is true since it
+% is in Previously, which can only happen if it is true.
 valid_proof(Prems, Goal, [[L, B, impel(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, A),
   lookup_line(Y, Previously, imp(A, B)), !,
   valid_proof(Prems, Goal, T, [[L, B, impel(X, Y)]|Previously]).
 % Negation introduction.
+% Assumes the predicate on line X and arrives at arbitrary contradiction.
+% Returns the negation of the assumption.
 valid_proof(Prems, Goal, [[L, neg(A), negint(X, Y)]|T], Previously) :-
   first_in_box(Previously, Box),
   lookup_line(X, Box, A),
   lookup_line(Y, Box, cont), !, 
   valid_proof(Prems, Goal, T, [[L, neg(A), negint(X, Y)]|Previously]).
 % Negation elimination.
+% Assumes something on line X is true and arrives at a contradiction on line Y.
+% Returns contradiction.
 valid_proof(Prems, Goal, [[L, cont, negel(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, A),
   lookup_line(Y, Previously, neg(A)), !,
   valid_proof(Prems, Goal, T, [[L, cont, negel(X, Y)]|Previously]).
 % Contradiction elimination.
+% Checks if the predicate on line X is a contradiction.
 valid_proof(Prems, Goal, [[L, A, contel(X)]|T], Previously) :-
   lookup_line(X, Previously, cont), !,
   valid_proof(Prems, Goal, T, [[L, A, contel(X)]|Previously]).
@@ -95,11 +121,13 @@ valid_proof(Prems, Goal, [[L, Y, negnegel(X)]|T], Previously) :-
   lookup_line(X, Previously, neg(neg(Y))), !,
   valid_proof(Prems, Goal, T, [[L, Y, negnegel(X)]|Previously]).
 % MT
+% Ensures that B implies A and negation of A is present.
 valid_proof(Prems, Goal, [[L, neg(B), mt(X, Y)]|T], Previously) :-
   lookup_line(X, Previously, imp(B, A)),
   lookup_line(Y, Previously, neg(A)),
   valid_proof(Prems, Goal, T, [[L, neg(B), mt(X, Y)]|Previously]).
 % Proof by contradiction.
+% Assume negation of A and arrive at a contradiction. Returns A.
 valid_proof(Prems, Goal, [[L, A, pbc(X, Y)]|T], Previously) :-
   first_in_box(Previously, Box),
   lookup_line(X, Box, neg(A)),
