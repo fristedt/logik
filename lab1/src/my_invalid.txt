@@ -1,0 +1,16 @@
+[and(p, r)].
+
+imp(p, q).
+
+[
+  [1, and(p, r), premise],
+  [
+    [2, p, assumption],
+    [
+      [3, q, assumption],
+      [4, and(p, r), copy(1)]
+    ],
+    [5, imp(q, and(p, r)), impint(3, 4)]
+  ],
+  [6, imp(p, q), impint(2, 5)]
+].
