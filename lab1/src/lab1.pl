@@ -67,10 +67,10 @@ valid_proof(Prems, Goal, [[L, or(Z, Y), orint2(X)]|T], Previously) :-
 % W is line number of last statement in second box.
 valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
   lookup_line(X, Previously, or(A, B)),
-  first_in_box(Box1, A),
-  first_in_box(Box2, B),
-  last_in_box(Box1, C),
-  last_in_box(Box2, C), !,
+  first_in_box(Box1, [Y, A, _]),
+  first_in_box(Box2, [V, B, _]),
+  last_in_box(Box1, [U, C, _]),
+  last_in_box(Box2, [W, C, _]), !,
   valid_proof(Prems, Goal, T, [[L, C, orel(X, Y, U, V, W)]|Previously]).
 % Implication introduction. 
 % Checks if the box that is being referenced to is in the scope of the current
@@ -78,11 +78,9 @@ valid_proof(Prems, Goal, [[L, C, orel(X, Y, U, V, W)]|T], Previously) :-
 % predicate in the same box. Checks if the line numbers of A and B matches 
 % X and Y.
 valid_proof(Prems, Goal, [[L, imp(A, B), impint(X, Y)]|T], Previously) :-
-  box_is_in_box(Previously, Box), 
-  first_in_box(Box, [_, A, _]), 
-  last_in_box(Box, [_, B, _]),
-  lookup_line(X, Box, A),
-  lookup_line(Y, Box, B), !,
+  box_is_in_box(Previously, Box), % Make sure that Box isn't in a closed box.
+  first_in_box(Box, [X, A, _]), 
+  last_in_box(Box, [Y, B, _]), !,
   valid_proof(Prems, Goal, T, [[L, imp(A, B), impint(X, Y)]|Previously]).
 % Implication elimination.
 % Look up the lines being referenced to and check if the predicate on line X
@@ -138,12 +136,6 @@ valid_proof(Prems, Goal, [[L, or(A, neg(A)), lem]|T], Previously) :-
   !,
   valid_proof(Prems, Goal, T, [[L, or(A, neg(A)), lem]|Previously]).
 
-% Check if line is valid.
-valid_line([_, P, premise], Prems) :- 
-  valid_premise(P, Prems).
-valid_line([_, _, assumption], _).
-valid_line([_, _, X], _) :- valid_proofilicous(X).
-
 % Make sure that the premise isn't in the middle of our proof or anything crazy.
 is_premise([]).
 is_premise([[_, _, premise]|T]) :- is_premise(T).
@@ -154,22 +146,29 @@ valid_premise(Prem, [Prem|_]).
 valid_premise(Prem, [_|T]) :-
   valid_premise(Prem, T).
 
+% Get the content of the line with the given Index in the given list.
+%   lookup_line(1, [[1, 2, _]], Line). => Line = 2
 lookup_line(_, [], _) :- fail.
 lookup_line(Index, [[Index, Line, _]|_], Line).
 lookup_line(Index, [_|T], Match) :- lookup_line(Index, T, Match).
 
+% Get the first element in the given list.
+%   first_in_box([1, 2, 3], H). => H = 1
 first_in_box([H|_], H).
 
+% Get the last element in the given list.
+%   last_in_box([1, 2, 3], L). => L = 3
 last_in_box([H|[]], H) :- !.
 last_in_box([_|T], H) :- last_in_box(T, H).
 
+% Determine if the given Box in in the list.
+%   box_is_in_box([1, 2, 3], 2). => true
 box_is_in_box([], _) :- !, fail.
 box_is_in_box([Box|_], Box).
 box_is_in_box([_|T], Box) :- box_is_in_box(T, Box).
 
 % Return !X.
-neg(X) :-
-  not(X).
+neg(X) :- not(X).
 
 % Check if an implication holds.
 imp(fail, fail) :- !.
@@ -182,4 +181,3 @@ and(A, B) :- A, B.
 % Logical or.
 or(A, _) :- A.
 or(_, B) :- B.
-
