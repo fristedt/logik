@@ -1,0 +1,59 @@
+1.
+cntatoms (atom (x)) = 1                             {Def 1}
+cntatoms (neg (x)) = cntatoms (x)                   {Def 2}
+cntatoms (and (x, y)) = cntatoms (x) + cntatoms (y) {Def 3}
+cntatoms (or (x, y)) = cntatoms (x) + cntatoms (y)  {Def 4}
+cntatoms (imp (x, y)) = cntatoms (x) + cntatoms (y) {Def 5}
+
+cntatoms (imp (neg (imp (atom (p), atom (q))), atom (p)))
+= cntatoms (neg (imp (atom (p), atom(q)))) + cntatoms (atom(p)) {Def 5}
+= cntatoms (imp (atom(p), atom(q))) + 1                         {Def 2}
+= cntatoms (atom(p)) + cntatoms (atom(q)) + 1                   {Def 2}
+= 1 + 1 + 1                                                     {Def 1}
+= 3                                                             {Aritmetik}
+
+2.
+cntsubs (atom (x)) = 2                               {Def 6}
+cntsubs (neg (x)) = 1 + cntsubs (x)                  {Def 7}
+cntsubs (and (x, y)) = 1 + cntsubs (x) + cntsubs (y) {Def 8}
+cntsubs (or (x, y)) = 1 + cntsubs (x) + cntsubs (y)  {Def 9}
+cntsubs (imp (x, y)) = 1 + cntsubs (x) + cntsubs (y) {Def 10}
+
+cntatoms (imp (neg (imp (atom (p), atom (q))), atom (p))) 
+= 1 + cntsubs ((neg (imp (atom (p), atom (q)))) + cntsubs (atom (p)) {Def 10}
+= 1 + 1 + cntsubs (imp (atom (p), atom (q))) + 2                     {Def 7}
+= 1 + 1 + 1 + cntsubs (atom (p)) + cntsubs (atom (q)) + 1            {Def 10}
+= 1 + 1 + 1 + 2 + 2 + 2                                              {Def 6}
+= 9                                                                  {Aritmetik}
+
+3.
+∀φ cntatoms (φ) ≤ cntsubs (φ)
+
+Fall 1: φ = atom (φ')
+cntatoms (atom (φ'))
+= 1                   {Def 1} 
+≤ cntsubs (atom (φ')) {Def 6}
+
+Fall 2: φ = neg (φ')
+Låt induktionshypotesen (IH) vara cntatoms (φ') ≤ cntsubs (φ').
+cntatoms (neg (φ')) 
+= cntatoms (φ')          {Def 2}
+≤ cntsubs (φ')           {IH}
+= cntsubs (neg (φ')) - 1 {Def 7}
+≤ cntsubs (neg (φ'))     {Aritmetik}
+
+Fall 3: φ = and (φ', φ'')
+Låt induktionshypotesen 1 (IH1) vara cntatoms (φ') ≤ cntsubs (φ') och
+induktionshypotesent 2 (IH2) vara cntatoms (φ'') ≤ cntsubs (φ'').
+
+cntatoms (and (φ', φ''))
+= cntatoms (φ') + cntatoms (φ'') {Def 3}
+≤ cntsubs (φ') + cntsubs (φ'')   {IH1, IH2}
+= cntsubs (and (φ', φ'')) - 1    {Def 8}
+≤ cntsubs (and (φ', φ''))        {Aritmetik}
+
+Fall 4: φ = or (φ', φ'')
+Samma som fall 3.
+
+Fall 5: φ = imp (φ', φ'')
+Samma som fall 3.
