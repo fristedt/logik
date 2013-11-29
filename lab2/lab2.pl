@@ -19,7 +19,7 @@ verify(Input) :-
 % Literals
 check(_, L, S, [], X) :- 
   getList(L, S, L1),
-  isIn(L1, X), !.
+  memberchk(X, L1), !.
 check(_, L, S, [], neg(X)) :- 
   \+ check(_, L, S, [], X), !.
 
@@ -47,8 +47,8 @@ check(T, L, S, [], ex(F)) :-
 % AG
 % Base case, loop found because state S is in list of visited states
 % U.
-check(_, _, S, U, _) :-
-  memberchk(S, U), !. 
+% check(_, _, S, U, _) :-
+%   memberchk(S, U), !. 
 check(T, L, S, U, ag(F)) :- 
   % Make sure that F holds in S.
   check(T, L, S, [], F),
@@ -58,17 +58,41 @@ check(T, L, S, U, ag(F)) :-
   checkAllGlobal(T, States, L, [S|U], ag(F)).
 
 % EG
+% check(T, L, S, U, eg(F)) :- 
+%   % Make sure that F holds in S.
+%   check(T, L, S, [], F),
+%   % Get all states reachable from S.
+%   getList(T, S, []), fail.
+check(T, L, S, U, eg(F)) :- 
+  % Make sure that F holds in S.
+  check(T, L, S, [], F),
+  % Get all states reachable from S.
+  getList(T, S, States),
+  % Filter paths were eg(F) does not hold.
+  filterList(T, L, States, F, FilteredStates),
+  % For some state s ∈ T1 from state S, check that F holds in s.
+  checkExistsGlobal(T, FilteredStates, L, [S|U], F).
+
 % EF
 % AF
-
-% TODO: Substitute all uses of this with memberchk.
-isIn([X|_], X) :- !.
-isIn([_|T], X) :- isIn(T, X).
 
 % Find all paths/labeling from given state (S) in AllPathsFromState.
 % getList([s0, [s1, s2]], s0, [s1, s2])
 getList([[S|[L|_]]|_], S, L) :- !.
 getList([_|T], S, L) :- getList(T, S, L).
+
+done([]) :- !.
+done([_|T]) :- done(T).
+
+filterList(_, _, [], _, T) :- 
+  done(T), !.
+filterList(T, L, [S|Tail], F, [S|T1]) :-
+  % getList(L, S, L1),
+  % memberchk(F, L1),
+  check(T, L, S, [], F),
+  filterList(T, L, Tail, F, [S|T1]), !.
+filterList(T, L, [_|Tail], F, T1) :-
+  filterList(T, L, Tail, F, T1), !.
 
 checkAllNext([], _, _, _).
 checkAllNext([H|T], L, S, X) :-
@@ -85,3 +109,11 @@ checkAllGlobal(Transitions, [H|T], L, U, F) :-
   check(Transitions, L, H, U, F),
   checkAllGlobal(Transitions, T, L, [H|U], F).
  
+% checkExistsGlobal(_, [H|[]], _, U, _) :- 
+%   memberchk(H, U), !, fail. 
+% checkExistsGlobal(_, [H|H], _, _, _).
+checkExistsGlobal(Transitions, [H|T], L, U, F) :-
+  check(Transitions, L, H, U, F),
+  checkAllGlobal(Transitions, T, L, [H|U], F).
+
+% filterList([[s0, [s0]], [s1, [s0]]], [[s0, [q]], [s1, [p, r]]], [s0], neg(p), X).
