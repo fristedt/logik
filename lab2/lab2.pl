@@ -70,23 +70,22 @@ check(T, L, S, U, eg(F)) :-
 
 % EF
 check(T, L, S, U, ef(F)) :- 
-  % \+ memberchk(S, U),
+  \+ memberchk(S, U),
   check(T, L, S, [], F).
 check(T, L, S, U, ef(F)) :- 
-  % \+ memberchk(S, U),
-  check(T, L, _, [S|U], ef(F)).
+  getList(T, S, T1),
+  memberchk(X, T1),
+  check(T, L, X, [S|U], ef(F)).
 
 % AF
 check(T, L, S, U, af(F)) :- 
-  % \+ memberchk(S, U),
+  % TODO: Ensure that S is not in U.
+  \+ member(S, U),
   check(T, L, S, [], F).
 check(T, L, S, U, af(F)) :- 
-  % Make sure that F holds in S.
-  check(T, L, S, [], F),
-  % Get all states reachable from S.
+  \+ member(S, U),
   getList(T, S, States),
-  % For all states s ∈ T1 from state S, check that F holds in s.
-  checkAllFuture(T, States, L, [S|U], af(F)).
+  checkAllFuture(T, L, States, [S|U], af(F)).
 
 % Find all paths/labeling from given state (S) in AllPathsFromState.
 % getList([s0, [s1, s2]], s0, [s1, s2])
@@ -106,6 +105,13 @@ filterList(T, L, [S|Tail], F, [S|T1]) :-
 filterList(T, L, [_|Tail], F, T1) :-
   filterList(T, L, Tail, F, T1), !.
 
+% Searches all the states in the third argument and returns true if
+% they satisfy the check.
+searchForX(Transitions, Labels, [State|_], X) :-
+  check(Transitions, Labels, State, [], X).
+searchForX(Transitions, Labels, [_|States], X) :-
+  searchForX(Transitions, Labels, States, X).
+
 checkAllNext([], _, _, _).
 checkAllNext([H|T], L, S, X) :-
   check([], L, H, [], X),
@@ -120,6 +126,11 @@ checkAllGlobal(_, [], _, _, _) :- !.
 checkAllGlobal(Transitions, [H|T], L, U, F) :-
   check(Transitions, L, H, U, F),
   checkAllGlobal(Transitions, T, L, [H|U], F).
+
+checkAllFuture(_, _, [], _, _).
+checkAllFuture(Transitions, Labels, [State|States], U, af(F)) :-
+  check(Transitions, Labels, State, U, af(F)),
+  checkAllFuture(Transitions, Labels, States, U, af(F)).
  
 % checkExistsGlobal(_, [H|[]], _, U, _) :- 
 %   memberchk(H, U), !, fail. 

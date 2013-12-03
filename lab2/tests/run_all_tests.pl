@@ -55,7 +55,7 @@ run_all_tests(ProgramToTest) :-
 'valid888.txt','valid896.txt','valid903.txt','valid905.txt','valid910.txt',
 'valid911.txt','valid912.txt','valid914.txt','valid917.txt','valid934.txt',
 'valid939.txt','valid951.txt','valid953.txt','valid968.txt','valid986.txt',
-'valid987.txt','valid999.txt']),
+'valid987.txt','valid999.txt'], 0, 0),
     all_invalid_ok(['invalid007.txt','invalid009.txt','invalid013.txt','invalid015.txt','invalid017.txt',
 'invalid019.txt','invalid020.txt','invalid025.txt','invalid026.txt','invalid027.txt',
 'invalid028.txt','invalid029.txt','invalid030.txt','invalid039.txt','invalid041.txt',
@@ -152,19 +152,21 @@ run_all_tests(ProgramToTest) :-
 'invalid965.txt','invalid966.txt','invalid970.txt','invalid974.txt','invalid976.txt',
 'invalid977.txt','invalid979.txt','invalid980.txt','invalid983.txt','invalid984.txt',
 'invalid989.txt','invalid990.txt','invalid991.txt','invalid993.txt','invalid995.txt',
-'invalid996.txt','invalid997.txt','invalid998.txt']),
-    halt.
-    
-all_valid_ok([]).
-all_valid_ok([Test | Remaining]) :-
-    write(Test), 
-    (verify(Test), write(' passed');
-    write(' failed. The proof is valid but your program rejected it!')),
-    nl, all_valid_ok(Remaining).
+'invalid996.txt','invalid997.txt','invalid998.txt'], 0, 0).
+    % halt.
 
-all_invalid_ok([]).
-all_invalid_ok([Test | Remaining]) :-
+all_valid_ok([], M, Total) :- writef('Correct: %d/%d', [M, Total]), nl.
+all_valid_ok([Test | Remaining], N, Total) :-
+    T2 is Total + 1,
     write(Test), 
-    (\+verify(Test), write(' passed');
-    write(' failed. The proof is invalid but your program accepted it!')),
-    nl, all_invalid_ok(Remaining).
+    (verify(Test), write(' passed'), M is N + 1;
+      write(' failed. The proof is valid but your program rejected it!'), M is N),
+      nl, all_valid_ok(Remaining, M, T2).
+
+all_invalid_ok([], M, Total) :- writef('Correct: %d/%d', [M, Total]), nl.
+all_invalid_ok([Test | Remaining], N, Total) :-
+    T2 is Total + 1,
+    write(Test), 
+    (\+verify(Test), write(' passed'), M is N + 1;
+    write(' failed. The proof is invalid but your program accepted it!'), M is N),
+    nl, all_invalid_ok(Remaining, M, T2).
