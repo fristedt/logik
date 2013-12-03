@@ -16,13 +16,6 @@ verify(Input) :-
 
 % To execute: consult(’your_file.pl’). verify(’input.txt’).
 
-% Literals
-check(_, L, S, [], X) :- 
-  getList(L, S, L1),
-  memberchk(X, L1), !.
-check(_, L, S, [], neg(X)) :- 
-  \+ check(_, L, S, [], X), !.
-
 % And
 check(T, L, S, [], and(F,G)) :-
   check(T, L, S, [], F),
@@ -35,47 +28,39 @@ check(T, L, S, [], or(_,G)) :-
   check(T, L, S, [], G), !.
 
 % AX
-check(T, L, S, [], ax(F)) :-
+check(T, L, S, U, ax(X)) :-
   getList(T, S, T1),
-  checkAllNext(T1, L, S, F), !.
+	checkAllNext(T,L,T1,U,X).
 
 % EX
-check(T, L, S, [], ex(F)) :-
-  getList(T, S, T1),
-  checkExistsNext(T1, L, S, F), !.
+check(T, L, S, U, ex(F)) :-
+  getList(T, S, States),
+  member(State, States),
+  check(T, L, State, U, F).
 
 % AG
 % Base case, loop found because state S is in list of visited states
 % U.
-check(_, _, S, U, _) :-
-  memberchk(S, U), !. 
+check(_, _, S, U, ag(_)) :-
+  member(S, U). 
 check(T, L, S, U, ag(F)) :- 
-  % Make sure that F holds in S.
   check(T, L, S, [], F),
-  % Get all states reachable from S.
-  getList(T, S, States),
-  % For all states s ∈ T1 from state S, check that F holds in s.
-  checkAllGlobal(T, States, L, [S|U], ag(F)).
+  check(T, L, S, [S|U], ax(ag(F))).
 
 % EG
-check(_, _, S, U, _) :-
+check(_, _, S, U, eg(_)) :-
   memberchk(S, U), !. 
 check(T, L, S, U, eg(F)) :- 
-  % Make sure that F holds in S.
   check(T, L, S, [], F),
-  % Ensure that X is reachable from S.
-  % getList(T, S, T1),
-  % memberchk(X, T1),
-  check(T, L, _, [S|U], eg(F)).
+  check(T, L, S, [S|U], ex(eg(F))).
 
 % EF
 check(T, L, S, U, ef(F)) :- 
   \+ memberchk(S, U),
   check(T, L, S, [], F).
 check(T, L, S, U, ef(F)) :- 
-  getList(T, S, T1),
-  memberchk(X, T1),
-  check(T, L, X, [S|U], ef(F)).
+  \+ memberchk(S, U),
+  check(T, L, S, [S|U], ex(ef(F))).
 
 % AF
 check(T, L, S, U, af(F)) :- 
@@ -84,12 +69,20 @@ check(T, L, S, U, af(F)) :-
   check(T, L, S, [], F).
 check(T, L, S, U, af(F)) :- 
   \+ member(S, U),
-  getList(T, S, States),
-  checkAllFuture(T, L, States, [S|U], af(F)).
+  check(T, L, S, [S|U], ax(af(F))).
+ 
+ % Literals
+check(_, L, S, [], neg(X)) :- 
+  % \+ check(_, L, S, [], X), !.
+  getList(L, S, L1),
+  \+ member(X, L1).
+check(_, L, S, [], X) :- 
+  getList(L, S, L1),
+  member(X, L1).
 
 % Find all paths/labeling from given state (S) in AllPathsFromState.
 % getList([s0, [s1, s2]], s0, [s1, s2])
-getList([[S|[L|_]]|_], S, L) :- !.
+getList([[S,L]|_], S, L) :- !.
 getList([_|T], S, L) :- getList(T, S, L).
 
 done([]) :- !.
@@ -105,33 +98,25 @@ filterList(T, L, [S|Tail], F, [S|T1]) :-
 filterList(T, L, [_|Tail], F, T1) :-
   filterList(T, L, Tail, F, T1), !.
 
-% Searches all the states in the third argument and returns true if
-% they satisfy the check.
-searchForX(Transitions, Labels, [State|_], X) :-
-  check(Transitions, Labels, State, [], X).
-searchForX(Transitions, Labels, [_|States], X) :-
-  searchForX(Transitions, Labels, States, X).
+checkAllNext(_, _, [], _, _).
+checkAllNext(T, L, [State|States], U, F) :-
+  check(T, L, State, U, F), !,
+  checkAllNext(T, L, States, U, F).
+% checkAXhelp(_,_,[],_,_).
+% checkAXhelp(T, L, [F|Rest], U, X) :-
+% 	check(T,L,F,U,X), !,
+% 	checkAXhelp(T,L,Rest,U,X).
 
-checkAllNext([], _, _, _).
-checkAllNext([H|T], L, S, X) :-
-  check([], L, H, [], X),
-  checkAllNext(T, L, S, X).
-
-checkExistsNext([H|_], L, _, X) :-
-  check([], L, H, [], X), !.
-checkExistsNext([_|T], L, S, X) :-
-  checkExistsNext(T, L, S, X).
-
-checkAllGlobal(_, [], _, _, _) :- !.
-checkAllGlobal(Transitions, [H|T], L, U, F) :-
-  check(Transitions, L, H, U, F),
-  checkAllGlobal(Transitions, T, L, [H|U], F).
+checkAllGlobal(_, _, [], _, _) :- !.
+checkAllGlobal(Transitions, Labels, [State|Rest], U, F) :-
+  check(Transitions, Labels, State, U, F),
+  checkAllGlobal(Transitions, Labels, Rest, [State|U], F).
 
 checkAllFuture(_, _, [], _, _).
 checkAllFuture(Transitions, Labels, [State|States], U, af(F)) :-
   check(Transitions, Labels, State, U, af(F)),
   checkAllFuture(Transitions, Labels, States, U, af(F)).
- 
+
 % checkExistsGlobal(_, [H|[]], _, U, _) :- 
 %   memberchk(H, U), !, fail. 
 % checkExistsGlobal(_, [H|H], _, _, _).
