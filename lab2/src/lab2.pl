@@ -93,6 +93,12 @@ check(_, Labels, State, [], F) :-
   % holds in the current state.
   member(F, Formulas).
 
+% Iterate over all given states and ensure the given formula holds in all states.
+checkAllNext(_, _, [], _, _).
+checkAllNext(T, L, [State|States], U, F) :-
+  check(T, L, State, U, F), !,
+  checkAllNext(T, L, States, U, F).
+
 % Get the associated list for the given state.
 %
 % Examples:
@@ -104,44 +110,3 @@ check(_, Labels, State, [], F) :-
 %   F = [r]
 getList([[State, Paths]|_], State, Paths) :- !.
 getList([_|T], State, Paths) :- getList(T, State, Paths).
-
-done([]) :- !.
-done([_|T]) :- done(T).
-
-filterList(_, _, [], _, T) :- 
-  done(T), !.
-filterList(T, L, [S|Tail], F, [S|T1]) :-
-  % getList(L, S, L1),
-  % memberchk(F, L1),
-  check(T, L, S, [], F),
-  filterList(T, L, Tail, F, [S|T1]), !.
-filterList(T, L, [_|Tail], F, T1) :-
-  filterList(T, L, Tail, F, T1), !.
-
-checkAllNext(_, _, [], _, _).
-checkAllNext(T, L, [State|States], U, F) :-
-  check(T, L, State, U, F), !,
-  checkAllNext(T, L, States, U, F).
-% checkAXhelp(_,_,[],_,_).
-% checkAXhelp(T, L, [F|Rest], U, X) :-
-% 	check(T,L,F,U,X), !,
-% 	checkAXhelp(T,L,Rest,U,X).
-
-checkAllGlobal(_, _, [], _, _) :- !.
-checkAllGlobal(Transitions, Labels, [State|Rest], U, F) :-
-  check(Transitions, Labels, State, U, F),
-  checkAllGlobal(Transitions, Labels, Rest, [State|U], F).
-
-checkAllFuture(_, _, [], _, _).
-checkAllFuture(Transitions, Labels, [State|States], U, af(F)) :-
-  check(Transitions, Labels, State, U, af(F)),
-  checkAllFuture(Transitions, Labels, States, U, af(F)).
-
-% checkExistsGlobal(_, [H|[]], _, U, _) :- 
-%   memberchk(H, U), !, fail. 
-% checkExistsGlobal(_, [H|H], _, _, _).
-% checkExistsGlobal(Transitions, [H|T], L, U, F) :-
-%   check(Transitions, L, H, U, F),
-%   checkAllGlobal(Transitions, T, L, [H|U], F).
-
-% filterList([[s0, [s0]], [s1, [s0]]], [[s0, [q]], [s1, [p, r]]], [s0], neg(p), X).
