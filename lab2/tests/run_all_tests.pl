@@ -152,21 +152,18 @@ run_all_tests(ProgramToTest) :-
 'invalid965.txt','invalid966.txt','invalid970.txt','invalid974.txt','invalid976.txt',
 'invalid977.txt','invalid979.txt','invalid980.txt','invalid983.txt','invalid984.txt',
 'invalid989.txt','invalid990.txt','invalid991.txt','invalid993.txt','invalid995.txt',
-'invalid996.txt','invalid997.txt','invalid998.txt'], 0, 0).
-    % halt.
+'invalid996.txt','invalid997.txt','invalid998.txt'], 0, 0), !.
 
-all_valid_ok([], M, Total) :- writef('Correct: %d/%d', [M, Total]), nl.
+all_valid_ok([], M, Total) :- writef('Valid: %d/%d', [M, Total]), nl.
 all_valid_ok([Test | Remaining], N, Total) :-
     T2 is Total + 1,
-    write(Test), 
-    (verify(Test), write(' passed'), M is N + 1;
-      write(' failed. The proof is valid but your program rejected it!'), M is N),
-      nl, all_valid_ok(Remaining, M, T2).
+    (verify(Test), M is N + 1;
+      write(Test), write(' failed. The proof is valid but your program rejected it!'), nl, M is N),
+      all_valid_ok(Remaining, M, T2).
 
-all_invalid_ok([], M, Total) :- writef('Correct: %d/%d', [M, Total]), nl.
+all_invalid_ok([], M, Total) :- writef('Invalid: %d/%d', [M, Total]), nl.
 all_invalid_ok([Test | Remaining], N, Total) :-
     T2 is Total + 1,
-    write(Test), 
-    (\+verify(Test), write(' passed'), M is N + 1;
-    write(' failed. The proof is invalid but your program accepted it!'), M is N),
-    nl, all_invalid_ok(Remaining, M, T2).
+    (\+verify(Test), M is N + 1;
+    write(Test), write(' failed. The proof is invalid but your program accepted it!'), nl, M is N),
+    all_invalid_ok(Remaining, M, T2).
