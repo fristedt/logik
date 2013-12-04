@@ -17,7 +17,7 @@ check(Transitions, Labels, State, [], or(_, F)) :-
 % ax
 check(Transitions, Labels, State, U, ax(F)) :-
   getList(Transitions, State, Paths),
-	checkAllNext(Transitions, Labels, Paths, U, F).
+  checkAllNext(Transitions, Labels, Paths, U, F).
 
 % ex
 check(Transitions, Labels, State, U, ex(F)) :-
