@@ -3,87 +3,107 @@ verify(Input) :-
   see(Input), read(T), read(L), read(S), read(F), seen,
   check(T, L, S, [], F).
 
-% check(T, L, S, U, F)
-% T - The transitions in form of adjacency lists
-% L - The labeling
-% S - Current state
-% U - Currently recorded states
-% F - CTL Formula to check.
-%
-% Should evaluate to true iff the sequent below is valid.
-% (T,L), S |- F
-%           U
+% and
+check(Transitions, Labels, State, [], and(F1, F2)) :-
+  check(Transitions, Labels, State, [], F1),
+  check(Transitions, Labels, State, [], F2).
 
-% To execute: consult(’your_file.pl’). verify(’input.txt’).
+% or
+check(Transitions, Labels, State, [], or(F, _)) :-
+  check(Transitions, Labels, State, [], F), !.
+check(Transitions, Labels, State, [], or(_, F)) :-
+  check(Transitions, Labels, State, [], F), !.
 
-% And
-check(T, L, S, [], and(F,G)) :-
-  check(T, L, S, [], F),
-  check(T, L, S, [], G).
+% ax
+check(Transitions, Labels, State, U, ax(F)) :-
+  getList(Transitions, State, Paths),
+	checkAllNext(Transitions, Labels, Paths, U, F).
 
-% Or
-check(T, L, S, [], or(F,_)) :-
-  check(T, L, S, [], F), !.
-check(T, L, S, [], or(_,G)) :-
-  check(T, L, S, [], G), !.
+% ex
+check(Transitions, Labels, State, U, ex(F)) :-
+  % Get all available paths from the given State.
+  getList(Transitions, State, States),
+  % Find a next state (S1) in the list of states (States) where F holds.
+  % Since member S1 is unbound at this point Prolog will iterate over the given
+  % list of states (States) until the next predicate is true which then implies
+  % that F holds in found next state.
+  member(S1, States),
+  check(Transitions, Labels, S1, U, F).
 
-% AX
-check(T, L, S, U, ax(X)) :-
-  getList(T, S, T1),
-	checkAllNext(T,L,T1,U,X).
+% ag
+check(_, _, State, U, ag(_)) :-
+  % Stop if the current state has been visited before.
+  member(State, U).
+check(Transitions, Labels, State, U, ag(F)) :-
+  % Ensure F hold in the current state (State).
+  check(Transitions, Labels, State, [], F),
+  % Use the fact that ax(ag(F)) will traverse all next paths and
+  % ensure that ag(F) holds in all those paths.
+  check(Transitions, Labels, State, [State|U], ax(ag(F))).
 
-% EX
-check(T, L, S, U, ex(F)) :-
-  getList(T, S, States),
-  member(State, States),
-  check(T, L, State, U, F).
+% eg
+check(_, _, State, U, eg(_)) :-
+  % Stop if the current state has been visited before.
+  member(State, U), !.
+check(Transitions, Labels, State, U, eg(F)) :-
+  % Ensure the formula holds in the current state.
+  check(Transitions, Labels, State, [], F),
+  % Get all paths from the current state.
+  getList(Transitions, State, Paths),
+  % See ex/5 for further comments.
+  member(S1, Paths),
+  check(Transitions, Labels, S1, [State|U], eg(F)).
 
-% AG
-% Base case, loop found because state S is in list of visited states
-% U.
-check(_, _, S, U, ag(_)) :-
-  member(S, U). 
-check(T, L, S, U, ag(F)) :- 
-  check(T, L, S, [], F),
-  check(T, L, S, [S|U], ax(ag(F))).
+% ef
+check(Transitions, Labels, State, U, ef(F)) :-
+  % Ensure the current state has not been visited before.
+  \+ member(State, U),
+  % Ensure the formula holds in the current state.
+  check(Transitions, Labels, State, [], F).
+check(Transitions, Labels, State, U, ef(F)) :-
+  % Ensure the current state has not been visited before.
+  \+ member(State, U),
+  % Traverse all paths from the current state in order to find a
+  % state where F holds.
+  check(Transitions, Labels, State, [State|U], ex(ef(F))).
 
-% EG
-check(_, _, S, U, eg(_)) :-
-  memberchk(S, U), !. 
-check(T, L, S, U, eg(F)) :- 
-  check(T, L, S, [], F),
-  check(T, L, S, [S|U], ex(eg(F))).
-
-% EF
-check(T, L, S, U, ef(F)) :- 
-  \+ memberchk(S, U),
-  check(T, L, S, [], F).
-check(T, L, S, U, ef(F)) :- 
-  \+ memberchk(S, U),
-  check(T, L, S, [S|U], ex(ef(F))).
-
-% AF
-check(T, L, S, U, af(F)) :- 
-  % TODO: Ensure that S is not in U.
-  \+ member(S, U),
-  check(T, L, S, [], F).
-check(T, L, S, U, af(F)) :- 
-  \+ member(S, U),
-  check(T, L, S, [S|U], ax(af(F))).
+% af
+check(Transitions, Labels, State, U, af(F)) :-
+  % Ensure the current state has not been visited before.
+  \+ member(State, U),
+  % Ensure the formula holds in the current state.
+  check(Transitions, Labels, State, [], F).
+check(Transitions, Labels, State, U, af(F)) :-
+  % See ef/5 for furher comments.
+  \+ member(State, U),
+  check(Transitions, Labels, State, [State|U], ax(af(F))).
  
- % Literals
-check(_, L, S, [], neg(X)) :- 
-  % \+ check(_, L, S, [], X), !.
-  getList(L, S, L1),
-  \+ member(X, L1).
-check(_, L, S, [], X) :- 
-  getList(L, S, L1),
-  member(X, L1).
+% neg
+check(_, Labels, State, [], neg(F)) :-
+  getList(Labels, State, Formulas),
+  % Ensure the given formula is not present in the list of formulas that holds
+  % in the current state.
+  \+ member(F, Formulas).
 
-% Find all paths/labeling from given state (S) in AllPathsFromState.
-% getList([s0, [s1, s2]], s0, [s1, s2])
-getList([[S,L]|_], S, L) :- !.
-getList([_|T], S, L) :- getList(T, S, L).
+% arbitrary formula
+check(_, Labels, State, [], F) :-
+  % Get all formulas that holds in the current state.
+  getList(Labels, State, Formulas),
+  % Ensure that the given formula is present in the list of formulas that
+  % holds in the current state.
+  member(F, Formulas).
+
+% Get the associated list for the given state.
+%
+% Examples:
+%
+%   getList([s0, [s1]], s0, P).
+%   P = [s1]
+%
+%   getList([s0, [r]], s0, F).
+%   F = [r]
+getList([[State, Paths]|_], State, Paths) :- !.
+getList([_|T], State, Paths) :- getList(T, State, Paths).
 
 done([]) :- !.
 done([_|T]) :- done(T).
