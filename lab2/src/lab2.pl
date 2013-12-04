@@ -35,7 +35,7 @@ check(_, _, State, U, ag(_)) :-
   % Stop if the current state has been visited before.
   member(State, U).
 check(Transitions, Labels, State, U, ag(F)) :-
-  % Ensure F hold in the current state (State).
+  % Ensure F hold in the current state.
   check(Transitions, Labels, State, [], F),
   % Use the fact that ax(ag(F)) will traverse all next paths and
   % ensure that ag(F) holds in all those paths.
@@ -63,9 +63,11 @@ check(Transitions, Labels, State, U, ef(F)) :-
 check(Transitions, Labels, State, U, ef(F)) :-
   % Ensure the current state has not been visited before.
   \+ member(State, U),
-  % Traverse all paths from the current state in order to find a
-  % state where F holds.
-  check(Transitions, Labels, State, [State|U], ex(ef(F))).
+  % Get all paths from the current state.
+  getList(Transitions, State, Paths),
+  % See ex/5 for furter comments.
+  member(S1, Paths),
+  check(Transitions, Labels, S1, [State|U], ef(F)).
 
 % af
 check(Transitions, Labels, State, U, af(F)) :-
