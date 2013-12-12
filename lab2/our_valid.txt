@@ -1,0 +1,15 @@
+[[in, [li]],
+ [li, [li, ad, us]],
+ [us, [lo]],
+ [ad, [us, lo]],
+ [lo, [in]]].
+
+[[in, []],
+ [li, []],
+ [us, [le, up]],
+ [ad, [le, up, ap]],
+ [lo, [le]]].
+
+in.
+
+af(imp(le, ef(neg(le)))).
