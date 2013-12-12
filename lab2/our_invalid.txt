@@ -10,8 +10,7 @@
  [ad, [le, up, ap]],
  [lo, [le]]].
 
-% If you are logged in, you either have user or admin privileges.
-% This is equivalent to af(le => or(ap, up)).
-in.
+% You can not login after logging out. Obviously false.
+lo.
 
-af(or(neg(le), or(ap, up))).
+ag(neg(le)).
