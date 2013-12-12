@@ -4,6 +4,7 @@
 \usepackage{color}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
+\usepackage[swedish]{babel}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
@@ -44,13 +45,45 @@
 \centerline{\sc Laboration 2}
 \vspace{2pc}
 
+\section{Modell}
+Vi har valt att modellera en webbsida med stöd för användarhantering i den
+utsträckningen att man kan logga in och ut. Det finns två typer av användare;
+administrator och en regelrätt användare. Både användarna har befogenhet att
+logga in och ut. Till skillnad från den regelrätta användaren har administören
+tillgång till en skyddad administrationssida.
+
+\subsection{Tillstånd}
+
+\begin{itemize}
+
+\item index: Startsidan synlig alla.
+\item login: Sida för att logga in, synlig för alla.
+\item user: Sida för inloggade användare.
+\item admin: Sida för inloggade administratörer. 
+\item logout: Sida för inloggade att logga ut. 
+
+\end{itemize}
+
+\subsection{Atomer}
+
+\begin{itemize}
+
+\item admin\_privileges: Administratörsrättigheter.
+\item user\_privileges: Användarrättigheter.
+
+\end{itemize}
+
+
+
+
+
 \begin{figure}[htbp]
-\includegraphics{model.ps}
-\caption{Write something about your figure here.
-     LaTeX will print whatever you write and give your figure a number.}
-\label{xyz}
+  \includegraphics[scale=0.5]{model.png}
+\caption{En webbsida med användarhantering.}
 \end{figure}
 
+\begin{figure}
 \lstinputlisting[language=Prolog]{../src/lab2.pl}
+\end{figure}
 
 \end{document}
