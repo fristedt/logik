@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage[swedish]{babel}
 \usepackage{fullpage}
+\usepackage[T1]{fontenc}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
@@ -36,7 +37,7 @@
     stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
     stringstyle=\color{mymauve},     % string literal style
     tabsize=2,                       % sets default tabsize to 2 spaces
-    % title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+    % title=\lstname                 % show the filename of files included with \lstinputlisting; also try caption instead of title
   }
 
   \begin{document}
@@ -47,6 +48,12 @@
   \centerline{Anton Lindqvist (antoli@kth.se)}
   \vspace{2pc}
 
+  \section{Inledning}
+  Vi har implementerat ett bevissystem för CTL i Prolog. Vår implementerar
+  stöder det givna, begränsade, bevissystemet och klarar alla testfall. Vår
+  implementation använder sig i hög utsträckning av s.k. \emph{pattern matching}
+  för att identifiera och hantera alla givna regler.
+
   \section{Modell}
   Vi har valt att modellera en webbsida med stöd för användarhantering i den
   utsträckningen att man kan logga in och ut. Det finns två typer av användare;
@@ -54,6 +61,7 @@
   logga in och ut. Till skillnad från den regelrätta användaren har administören
   tillgång till en skyddad administrationssida.
   \begin{figure}[h!]
+    \centering
     \includegraphics[scale=0.4]{model.png}
     \caption{En webbsida med användarhantering.}
   \end{figure}
@@ -155,7 +163,7 @@
       Kan användas rekursivt för att verifiera samtliga states.
 
     \item \textbf{getList([[State, Paths]|\_], State, Paths)}: Hjälpmetod för
-      att hämta en lista ur en lista. Se exempel nedan.
+      att hämta en lista ur en lista. Se exempel i programkoden.
   \end{itemize}
 
   \section{Programkod}
